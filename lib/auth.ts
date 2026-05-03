@@ -72,6 +72,9 @@ async function sendLoginLog(profile: any, ip: string, userAgent: string) {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  // @ts-ignore
+  trustHost: true,
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? "",
