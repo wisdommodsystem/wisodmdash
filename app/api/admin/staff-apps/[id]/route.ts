@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import StaffApplication from "@/models/StaffApplication";
-import Notification from "@/models/Notification";
+import Notification from "@/models/BroadcastNotification";
 
 export async function PATCH(
   req: Request,
@@ -30,13 +30,13 @@ export async function PATCH(
     // Send Notification to user
     try {
       await Notification.create({
-        userId: application.userId,
+        recipientId: application.userId,
+        target: "Specific",
         title: status === "accepted" ? "Application Accepted! 🎉" : "Application Update",
         message: status === "accepted" 
           ? `Congratulations! Your staff application for ${application.department} has been accepted. Check Discord for further instructions.` 
           : `We regret to inform you that your staff application for ${application.department} was not accepted at this time.`,
-        type: status === "accepted" ? "Success" : "Alert",
-        link: "/discord"
+        type: status === "accepted" ? "Gift" : "Alert",
       });
     } catch (notifErr) {
       console.error("Failed to create notification:", notifErr);
