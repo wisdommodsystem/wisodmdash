@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
+
+
 import connectToDatabase from "@/lib/mongodb";
 import StaffApplication from "@/models/StaffApplication";
 import Notification from "@/models/BroadcastNotification";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
