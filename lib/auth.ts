@@ -75,11 +75,39 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // @ts-ignore
   trustHost: true,
+  cookies: {
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: true
+      }
+    },
+    csrfToken: {
+      name: `__Secure-next-auth.csrf-token`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: true
+      }
+    },
+    pkceCodeVerifier: {
+      name: `__Secure-next-auth.pkce.code_verifier`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+        maxAge: 900
+      }
+    }
+  },
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? "",
       clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
-      authorization: { params: { scope: "identify" } }
+      authorization: { params: { scope: "identify" } },
+      checks: ["state"] // تقليل الطلبات التكرارية
     })
   ],
   pages: {
