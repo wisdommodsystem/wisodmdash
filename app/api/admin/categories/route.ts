@@ -25,43 +25,36 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, icon } = body;
 
-    console.log("[Category API] Received request:", { name, icon });
-
     if (!name || !name.trim()) {
-      console.warn("[Category API] Validation failed: Name is empty");
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
     const trimmedName = name.trim();
-
-    // Check if category exists (case-insensitive)
-    const existingCategory = await Category.findOne({ 
-      name: { $regex: new RegExp(`^${trimmedName}$`, "i") } 
-    });
-
-    if (existingCategory) {
-      console.warn("[Category API] Conflict: Category already exists:", existingCategory.name);
-      return NextResponse.json({ 
-        error: `Category "${existingCategory.name}" already exists` 
-      }, { status: 400 });
-    }
-
-    console.log("[Category API] Creating new category:", trimmedName);
-    const newCategory = await Category.create({ 
-      name: trimmedName, 
-      icon: icon || "Tag" 
-    });
     
-    console.log("[Category API] Success:", newCategory._id);
-    return NextResponse.json(newCategory, { status: 201 });
+    // إزالة كافة أنواع التحقق اليدوي للسماح بالتكرار المطلق
+    // استخدام insertOne خام (raw) لتجنب أي تعارض مع فهارس (indexes) قديمة في الموديل
+    const collection = Category.collection;
+
+    // توليد slug عشوائي فريد تماماً لكل عملية إدخال لتجنب تعارض الفهرس القديم slug_1
+    const uniqueSlug = `cat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    const result = await collection.insertOne({
+      name: trimmedName,
+      slug: uniqueSlug,
+      icon: icon || "Tag",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    console.log("[Category API] Category created (Force Mode):", result.insertedId);
+    return NextResponse.json({ _id: result.insertedId, name: trimmedName, icon: icon || "Tag" }, { status: 201 });
   } catch (error: any) {
     console.error("[Category API] CRITICAL ERROR:", error);
-    if (error.code === 11000) {
-      return NextResponse.json({ error: "Category already exists (Database Constraint)" }, { status: 400 });
-    }
+    
     return NextResponse.json({ 
       error: "Internal Server Error", 
-      details: error.message 
+      details: error.message,
+      code: error.code
     }, { status: 500 });
   }
 }
