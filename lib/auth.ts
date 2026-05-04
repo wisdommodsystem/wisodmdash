@@ -52,34 +52,6 @@ async function sendLoginLog(profile: any, ip: string, userAgent: string) {
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
-  useSecureCookies: true, // إجبار استخدام كوكيز مؤمنة
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    },
-    callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    },
-    csrfToken: {
-      name: `__Secure-next-auth.csrf-token`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    }
-  },
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? "",
@@ -89,6 +61,17 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: "/"
+  },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true
+      }
+    }
   },
   callbacks: {
     async jwt({ token, profile }) {
