@@ -8,7 +8,11 @@ export async function GET() {
   try {
     await connectToDatabase();
     const categories = await Category.find({});
-    return NextResponse.json(categories);
+    const safeCategories = (categories || []).map(cat => ({
+      ...cat.toObject(),
+      name: cat.name || 'Unnamed Category'
+    }));
+    return NextResponse.json(safeCategories);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
@@ -21,15 +25,33 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, icon } = body;
 
-    if (!name) {
+    if (!name || !name.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const newCategory = await Category.create({ name, icon: icon || "Tag" });
+    const trimmedName = name.trim();
+
+    // Check if category exists (case-insensitive)
+    const existingCategory = await Category.findOne({ 
+      name: { $regex: new RegExp(`^${trimmedName}$`, "i") } 
+    });
+
+    if (existingCategory) {
+      return NextResponse.json({ 
+        error: `Category "${existingCategory.name}" already exists` 
+      }, { status: 400 });
+    }
+
+    const newCategory = await Category.create({ 
+      name: trimmedName, 
+      icon: icon || "Tag" 
+    });
+    
     return NextResponse.json(newCategory, { status: 201 });
-  } catch (error) {
-    if ((error as any).code === 11000) {
-      return NextResponse.json({ error: "Category already exists" }, { status: 400 });
+  } catch (error: any) {
+    console.error("Category creation error:", error);
+    if (error.code === 11000) {
+      return NextResponse.json({ error: "Category already exists (Database Constraint)" }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
   }
