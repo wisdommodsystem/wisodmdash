@@ -278,7 +278,9 @@ export function RoleManagement() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="rounded-md bg-white/5 px-2 py-1 text-xs">
-                          {typeof role.categoryId === 'object' ? role.categoryId.name : 'Unknown'}
+                          {typeof role.categoryId === 'object' && role.categoryId !== null 
+                            ? role.categoryId.name 
+                            : 'Uncategorized'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
