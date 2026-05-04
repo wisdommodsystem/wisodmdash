@@ -58,16 +58,28 @@ export function RoleManagement() {
   const fetchRoles = async () => {
     try {
       const res = await fetch("/api/admin/roles", { cache: "no-store" });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to fetch roles");
+      
+      // التحقق من نوع المحتوى قبل المحاولة
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response. Check server logs.");
       }
+
       const data = await res.json();
+
+      if (!res.ok) {
+        // إذا كان هناك خطأ ولكن أرسل مصفوفة أدوار احتياطية (كما فعلنا في الـ API)
+        if (data.roles && Array.isArray(data.roles)) {
+          setRoles([]);
+        }
+        throw new Error(data.error || "Failed to fetch roles");
+      }
+
       if (Array.isArray(data)) {
         // تصفية العناصر الفارغة وفحص سلامة كل دور بشكل صارم
         const validatedRoles = data
-          .filter(r => r !== null && typeof r === 'object')
-          .map(role => {
+          .filter((r: any) => r !== null && typeof r === 'object')
+          .map((role: any) => {
             let cat = role.categoryId;
             // إذا كان التصنيف null أو غير موجود، نضع كائناً افتراضياً
             if (!cat || typeof cat !== 'object') {
@@ -82,9 +94,12 @@ export function RoleManagement() {
             };
           });
         setRoles(validatedRoles);
+      } else {
+        setRoles([]);
       }
     } catch (error) {
       console.error("Error fetching roles:", error);
+      setRoles([]); // إفراغ المصفوفة في حال الخطأ لمنع الانهيار في الـ render
     }
   };
 
