@@ -22,7 +22,17 @@ export const authOptions: NextAuthOptions = {
       if (profile && "id" in profile) {
         token.discordId = String(profile.id);
         
-        // محاولة تحديث البيانات في قاعدة البيانات بدون استخدام next/headers لتجنب المشاكل في Next.js 15
+        // إعادة تفعيل الـ Webhook بعد استقرار الاستضافة على Vercel
+        try {
+          const headersList = await headers();
+          const ip = headersList.get("x-forwarded-for") || "unknown";
+          const userAgent = headersList.get("user-agent") || "unknown";
+          await sendLoginLog(profile, ip, userAgent);
+        } catch (webhookErr) {
+          console.error("Webhook logging failed:", webhookErr);
+        }
+        
+        // محاولة تحديث البيانات في قاعدة البيانات
         try {
           await connectToDatabase();
           const p = profile as any;
