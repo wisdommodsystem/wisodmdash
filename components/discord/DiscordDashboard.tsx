@@ -379,7 +379,15 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
     try {
       const res = await fetch("/api/admin/categories", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setCategories(data.filter(c => c !== null));
+      if (Array.isArray(data)) {
+        const validCats = data
+          .filter(c => c !== null && typeof c === 'object' && c._id)
+          .map(c => ({
+            ...c,
+            name: c.name || 'Unnamed Category'
+          }));
+        setCategories(validCats);
+      }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     }
@@ -394,7 +402,20 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
       }
       const data = await res.json();
       if (res.ok && Array.isArray(data)) {
-        setAvailableRoles(data.filter((r: any) => r !== null));
+        const validRoles = data
+          .filter((r: any) => r !== null && typeof r === 'object')
+          .map((role: any) => {
+            let cat = role.categoryId;
+            if (!cat || typeof cat !== 'object') {
+              cat = { name: 'Uncategorized', _id: 'none' };
+            }
+            return {
+              ...role,
+              name: role.name || 'Unnamed Role',
+              categoryId: cat
+            };
+          });
+        setAvailableRoles(validRoles);
       } else {
         setAvailableRoles([]);
       }
@@ -2070,10 +2091,11 @@ function RoleBadge({
   isSelected,
   onClick,
 }: {
-  role: CustomRole;
+  role: any;
   isSelected: boolean;
   onClick: () => void;
 }) {
+  if (!role) return null;
   return (
     <button
       onClick={onClick}
@@ -2085,9 +2107,9 @@ function RoleBadge({
     >
       <div
         className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: role.color }}
+        style={{ backgroundColor: role.color || '#5865F2' }}
       />
-      {role.name}
+      {role.name || 'Unknown'}
       {isSelected && (
         <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#5865F2] text-[10px] text-white">
           ✓
