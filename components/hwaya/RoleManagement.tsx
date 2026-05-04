@@ -143,7 +143,8 @@ export function RoleManagement() {
         await fetchCategories();
       } else {
         const err = await res.json();
-        alert(err.error);
+        console.error("[UI] Category Add Error:", err);
+        alert(`Error: ${err.error || "Unknown error"}\nDetails: ${err.details || "None"}`);
       }
     } catch (error) {
       console.error("Error adding category:", error);
