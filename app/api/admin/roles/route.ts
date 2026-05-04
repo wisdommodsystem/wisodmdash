@@ -7,11 +7,29 @@ import "@/models/Category"; // ضمان تسجيل موديل التصنيفات
 export async function GET() {
   try {
     await connectToDatabase();
-    const roles = await CustomRole.find({}).populate("categoryId");
-    return NextResponse.json(roles);
+    
+    // فحص سلامة الموديلات قبل الطلب
+    if (!CustomRole) {
+      console.error("CustomRole model not found");
+      return NextResponse.json({ error: "Model error" }, { status: 500 });
+    }
+
+    const roles = await CustomRole.find({}).populate("categoryId").lean();
+    
+    // التأكد من أن كل دور يحتوي على بيانات أساسية حتى لو فشل الـ populate
+    const safeRoles = (roles || []).map(role => ({
+      ...role,
+      categoryId: role.categoryId || { name: 'Uncategorized', _id: 'none' }
+    }));
+
+    return NextResponse.json(safeRoles);
   } catch (error: any) {
-    console.error("Fetch roles error:", error);
-    return NextResponse.json({ error: error.message || "Failed to fetch roles" }, { status: 500 });
+    console.error("CRITICAL API ERROR [/api/admin/roles]:", error);
+    // إرجاع مصفوفة فارغة مع الخطأ لتجنب انهيار الفرونت إند
+    return NextResponse.json({ 
+      error: error.message || "Internal Server Error",
+      roles: [] 
+    }, { status: 500 });
   }
 }
 
