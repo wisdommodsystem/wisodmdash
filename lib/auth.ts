@@ -62,22 +62,10 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/"
   },
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    }
-  },
   callbacks: {
     async jwt({ token, profile }) {
       if (profile && "id" in profile) {
         token.discordId = String(profile.id);
-        
         const headersList = await headers();
         const ip = headersList.get("x-forwarded-for") || "unknown";
         const userAgent = headersList.get("user-agent") || "unknown";
@@ -112,8 +100,8 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (url.startsWith(baseUrl)) return url;
+      // هذا يضمن التوجيه دائماً لصفحة الديسكورد بعد النجاح
+      if (url.startsWith(baseUrl)) return `${baseUrl}/discord`;
       return `${baseUrl}/discord`;
     }
   }
