@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import CustomRole from "@/models/CustomRole";
+import "@/models/Category"; // ضمان تسجيل موديل التصنيفات قبل عمل populate
 
 // Get all roles
 export async function GET() {
@@ -8,8 +9,9 @@ export async function GET() {
     await connectToDatabase();
     const roles = await CustomRole.find({}).populate("categoryId");
     return NextResponse.json(roles);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch roles" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Fetch roles error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch roles" }, { status: 500 });
   }
 }
 
