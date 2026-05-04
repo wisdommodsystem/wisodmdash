@@ -1,7 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Tag } from "lucide-react";
+// Inline SVG icons to avoid missing lucide-react dependency
+const Plus = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+);
+
+const Trash2 = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+  </svg>
+);
+
+const Tag = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>
+  </svg>
+);
 
 interface Category {
   _id: string;
@@ -39,17 +56,36 @@ export function RoleManagement() {
   }, []);
 
   const fetchRoles = async () => {
-    const res = await fetch("/api/admin/roles");
-    const data = await res.json();
-    if (Array.isArray(data)) setRoles(data);
+    try {
+      const res = await fetch("/api/admin/roles");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        // فحص كل دور للتأكد من سلامة البيانات قبل تخزينها
+        const validatedRoles = data.map(role => ({
+          ...role,
+          categoryId: role.categoryId || 'Uncategorized'
+        }));
+        setRoles(validatedRoles);
+      }
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
   };
 
   const fetchCategories = async () => {
-    const res = await fetch("/api/admin/categories");
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      setCategories(data);
-      if (data.length > 0 && !categoryId) setCategoryId(data[0]._id);
+    try {
+      const res = await fetch("/api/admin/categories");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        // التأكد من أن البيانات مصفوفة وليست null
+        setCategories(data);
+        if (data.length > 0 && !categoryId) {
+          const firstValidCat = data.find(c => c && c._id);
+          if (firstValidCat) setCategoryId(firstValidCat._id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -165,7 +201,7 @@ export function RoleManagement() {
         </form>
 
         <div className="flex flex-wrap gap-3">
-          {categories.map((cat) => (
+          {categories.filter(cat => cat !== null).map((cat) => (
             <div
               key={cat._id}
               className="group flex items-center gap-3 rounded-full border border-white/10 bg-[#151a2b] px-4 py-2 text-sm text-white transition hover:border-white/20"
@@ -224,7 +260,7 @@ export function RoleManagement() {
                 required
               >
                 <option value="" disabled>Select Category</option>
-                {categories.map((cat) => (
+                {categories.filter(c => c !== null).map((cat) => (
                   <option key={cat._id} value={cat._id}>{cat.name}</option>
                 ))}
               </select>
