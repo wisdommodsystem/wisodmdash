@@ -388,10 +388,19 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
   const fetchAvailableRoles = async () => {
     try {
       const res = await fetch("/api/admin/roles", { cache: "no-store" });
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
+      }
       const data = await res.json();
-      if (Array.isArray(data)) setAvailableRoles(data.filter(r => r !== null));
+      if (res.ok && Array.isArray(data)) {
+        setAvailableRoles(data.filter((r: any) => r !== null));
+      } else {
+        setAvailableRoles([]);
+      }
     } catch (error) {
       console.error("Failed to fetch available roles:", error);
+      setAvailableRoles([]);
     }
   };
 
@@ -989,15 +998,15 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
                       {profile.roles.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
-                          {profile.roles.map((role) => (
-                            <span
-                              key={role.id}
-                              className="rounded-full border border-white/15 px-3 py-1 text-sm transition-colors hover:bg-white/5"
-                              style={{ color: role.color }}
-                            >
-                              {role.name}
-                            </span>
-                          ))}
+                      {(profile?.roles || []).filter((r: any) => r !== null).map((role: any) => (
+                        <span
+                          key={role.id || Math.random().toString()}
+                          className="rounded-full border border-white/15 px-3 py-1 text-sm transition-colors hover:bg-white/5"
+                          style={{ color: role.color || '#9ca3af' }}
+                        >
+                          {role.name || 'Unknown'}
+                        </span>
+                      ))}
                         </div>
                       ) : (
                         <p className="text-sm text-slate-400">No roles found.</p>
