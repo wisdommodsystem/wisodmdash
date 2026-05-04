@@ -157,12 +157,13 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch("/api/notifications", { cache: 'no-store' });
+      const res = await fetch("/api/notifications", { cache: "no-store" });
       const data = await res.json();
       if (Array.isArray(data)) {
-        setNotifications(data);
+        const validNotifications = data.filter(n => n !== null && typeof n === 'object');
+        setNotifications(validNotifications);
         // An unread notification is one where the user's Discord ID is NOT in the readBy array
-        const unread = data.filter((n: any) => !n.readBy?.includes(profile?.id)).length;
+        const unread = validNotifications.filter((n: any) => !n.readBy?.includes(profile?.id)).length;
         setUnreadCount(unread);
       }
     } catch (error) {
@@ -176,16 +177,18 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
         await fetch("/api/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ notificationId: id })
+          body: JSON.stringify({ notificationId: id }),
+          cache: "no-store"
         });
       } else {
         // Mark all as read logic - loop through unread and mark them
-        const unread = notifications.filter((n: any) => !n.readBy?.includes(profile?.id));
+        const unread = notifications.filter((n: any) => n !== null && !n.readBy?.includes(profile?.id));
         await Promise.all(unread.map(n => 
           fetch("/api/notifications", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ notificationId: n._id })
+            body: JSON.stringify({ notificationId: n._id }),
+            cache: "no-store"
           })
         ));
       }
@@ -216,9 +219,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchPermRequests = async () => {
     try {
-      const res = await fetch("/api/user/permissions");
+      const res = await fetch("/api/user/permissions", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setPermRequests(data);
+      if (Array.isArray(data)) setPermRequests(data.filter(r => r !== null));
     } catch (error) {
       console.error("Failed to fetch permission requests:", error);
     }
@@ -248,7 +251,7 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchStaffAppStatus = async () => {
     try {
-      const res = await fetch("/api/user/apply");
+      const res = await fetch("/api/user/apply", { cache: "no-store" });
       const data = await res.json();
       setStaffAppEnabled(data.isEnabled);
       setUserStaffApp(data.application);
@@ -293,9 +296,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
   const fetchLeaderboard = async () => {
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch("/api/user/leaderboard");
+      const res = await fetch("/api/user/leaderboard", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setLeaderboard(data);
+      if (Array.isArray(data)) setLeaderboard(data.filter(l => l !== null));
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
     } finally {
@@ -305,9 +308,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchUserTickets = async () => {
     try {
-      const res = await fetch("/api/user/tickets");
+      const res = await fetch("/api/user/tickets", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setTickets(data);
+      if (Array.isArray(data)) setTickets(data.filter(t => t !== null));
     } catch (error) {
       console.error("Failed to fetch tickets:", error);
     }
@@ -315,9 +318,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchTicketMessages = async (ticketId: string) => {
     try {
-      const res = await fetch(`/api/tickets/messages?ticketId=${ticketId}`);
+      const res = await fetch(`/api/tickets/messages?ticketId=${ticketId}`, { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setMessages(data);
+      if (Array.isArray(data)) setMessages(data.filter(m => m !== null));
     } catch (error) {
       console.error("Failed to fetch messages:", error);
     }
@@ -374,9 +377,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/admin/categories");
+      const res = await fetch("/api/admin/categories", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setCategories(data);
+      if (Array.isArray(data)) setCategories(data.filter(c => c !== null));
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     }
@@ -384,9 +387,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchAvailableRoles = async () => {
     try {
-      const res = await fetch("/api/admin/roles");
+      const res = await fetch("/api/admin/roles", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setAvailableRoles(data);
+      if (Array.isArray(data)) setAvailableRoles(data.filter(r => r !== null));
     } catch (error) {
       console.error("Failed to fetch available roles:", error);
     }
@@ -394,10 +397,10 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const fetchUserSelectedRoles = async () => {
     try {
-      const res = await fetch("/api/user/profile/roles");
+      const res = await fetch("/api/user/profile/roles", { cache: "no-store" });
       const data = await res.json();
       if (Array.isArray(data)) {
-        setSelectedRoleIds(data.map((r: any) => r._id));
+        setSelectedRoleIds(data.filter(r => r !== null).map((r: any) => r._id));
       }
     } catch (error) {
       console.error("Failed to fetch user roles:", error);
@@ -438,14 +441,16 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const rolesByCategory = useMemo(() => {
     const grouped: Record<string, CustomRole[]> = {};
-    const validCategories = (categories || []).filter(cat => cat && cat._id);
-    const validRoles = (availableRoles || []).filter(role => role !== null);
+    const validCategories = (categories || []).filter(cat => cat && typeof cat === 'object' && cat._id);
+    const validRoles = (availableRoles || []).filter(role => role !== null && typeof role === 'object');
     
     validCategories.forEach(cat => {
       grouped[cat._id] = validRoles.filter(role => {
-        const roleCatId = (role.categoryId && typeof role.categoryId === 'object') 
-          ? role.categoryId._id 
-          : role.categoryId;
+        // فحص دفاعي صارم لـ categoryId
+        const catObj = role.categoryId;
+        const roleCatId = (catObj && typeof catObj === 'object') 
+          ? (catObj._id || null) 
+          : catObj;
         
         return roleCatId === cat._id;
       });
@@ -455,7 +460,7 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const visibleCategories = useMemo(() => {
     return (categories || []).filter(cat => 
-      cat && cat._id && rolesByCategory[cat._id] && rolesByCategory[cat._id].length > 0
+      cat && typeof cat === 'object' && cat._id && rolesByCategory[cat._id] && rolesByCategory[cat._id].length > 0
     );
   }, [categories, rolesByCategory]);
 
