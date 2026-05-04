@@ -15,9 +15,11 @@ app.prepare().then(() => {
     try {
       const parsedUrl = parse(req.url, true);
       
-      // إجبار NextAuth على رؤية الطلب كـ HTTPS
-      req.headers['x-forwarded-proto'] = 'https';
-      
+      // ضروري جداً لعمل NextAuth على Render
+      if (req.headers['x-forwarded-proto'] !== 'https') {
+        req.headers['x-forwarded-proto'] = 'https';
+      }
+
       await handle(req, res, parsedUrl);
     } catch (err) {
       console.error('Error occurred handling', req.url, err);
