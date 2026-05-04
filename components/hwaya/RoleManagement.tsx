@@ -57,18 +57,30 @@ export function RoleManagement() {
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch("/api/admin/roles");
+      const res = await fetch("/api/admin/roles", { cache: "no-store" });
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to fetch roles");
       }
       const data = await res.json();
       if (Array.isArray(data)) {
-        // تصفية العناصر الفارغة وفحص سلامة كل دور
-        const validatedRoles = data.filter(r => r !== null).map(role => ({
-          ...role,
-          categoryId: role.categoryId || { name: 'Uncategorized', _id: 'none' }
-        }));
+        // تصفية العناصر الفارغة وفحص سلامة كل دور بشكل صارم
+        const validatedRoles = data
+          .filter(r => r !== null && typeof r === 'object')
+          .map(role => {
+            let cat = role.categoryId;
+            // إذا كان التصنيف null أو غير موجود، نضع كائناً افتراضياً
+            if (!cat || typeof cat !== 'object') {
+              cat = { name: 'Uncategorized', _id: typeof cat === 'string' ? cat : 'none' };
+            } else if (!cat.name) {
+              cat.name = 'Uncategorized';
+            }
+            
+            return {
+              ...role,
+              categoryId: cat
+            };
+          });
         setRoles(validatedRoles);
       }
     } catch (error) {
@@ -78,10 +90,11 @@ export function RoleManagement() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/admin/categories");
+      const res = await fetch("/api/admin/categories", { cache: "no-store" });
       const data = await res.json();
       if (Array.isArray(data)) {
-        const validCats = data.filter(c => c !== null && c._id && c.name);
+        // التأكد من أن كل تصنيف هو كائن صالح ويحتوي على اسم
+        const validCats = data.filter(c => c !== null && typeof c === 'object' && c._id && c.name);
         setCategories(validCats);
         if (validCats.length > 0 && !categoryId) {
           setCategoryId(validCats[0]._id);
@@ -94,16 +107,17 @@ export function RoleManagement() {
 
   const addCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!categoryName.trim()) return;
     setCatLoading(true);
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: categoryName }),
+        body: JSON.stringify({ name: categoryName.trim() }),
       });
       if (res.ok) {
         setCategoryName("");
-        fetchCategories();
+        await fetchCategories();
       } else {
         const err = await res.json();
         alert(err.error);
@@ -116,13 +130,13 @@ export function RoleManagement() {
   };
 
   const deleteCategory = async (id: string) => {
-    if (!confirm("Are you sure? This will fail if roles are assigned to this category.")) return;
+    if (!id || !confirm("Are you sure? This will fail if roles are assigned to this category.")) return;
     try {
       const res = await fetch(`/api/admin/categories?id=${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        fetchCategories();
+        await fetchCategories();
       } else {
         const err = await res.json();
         alert(err.error);
@@ -151,14 +165,8 @@ export function RoleManagement() {
       if (res.ok) {
         setName("");
         setDiscordRoleId("");
-        // تحديث القائمة محلياً فوراً لتجنب أي تأخير في الـ fetch
-        const newRoleWithCategory = {
-          ...result,
-          categoryId: categories.find(c => c._id === categoryId) || { name: 'Uncategorized', _id: categoryId }
-        };
-        setRoles(prev => [...prev, newRoleWithCategory]);
-        // ثم نقوم بعمل fetch للتأكد من مزامنة البيانات بالكامل
-        fetchRoles();
+        // تحديث القائمة فوراً
+        await fetchRoles();
       } else {
         alert(result.error || "Failed to add role");
       }
@@ -171,12 +179,12 @@ export function RoleManagement() {
   };
 
   const deleteRole = async (id: string) => {
-    if (!confirm("Are you sure?")) return;
+    if (!id || !confirm("Are you sure?")) return;
     try {
       const res = await fetch(`/api/admin/roles?id=${id}`, {
         method: "DELETE",
       });
-      if (res.ok) fetchRoles();
+      if (res.ok) await fetchRoles();
     } catch (error) {
       console.error("Error deleting role:", error);
     }
@@ -217,14 +225,14 @@ export function RoleManagement() {
         </form>
 
         <div className="flex flex-wrap gap-3">
-          {categories.filter(cat => cat !== null).map((cat) => (
+          {categories.map((cat) => (
             <div
-              key={cat._id}
+              key={cat?._id || Math.random().toString()}
               className="group flex items-center gap-3 rounded-full border border-white/10 bg-[#151a2b] px-4 py-2 text-sm text-white transition hover:border-white/20"
             >
-              <span>{cat.name}</span>
+              <span>{cat?.name || 'Unknown Category'}</span>
               <button
-                onClick={() => deleteCategory(cat._id)}
+                onClick={() => cat?._id && deleteCategory(cat._id)}
                 className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -276,8 +284,8 @@ export function RoleManagement() {
                 required
               >
                 <option value="" disabled>Select Category</option>
-                {categories.filter(c => c !== null).map((cat) => (
-                  <option key={cat._id} value={cat._id}>{cat.name}</option>
+                {categories.map((cat) => (
+                  <option key={cat?._id || Math.random()} value={cat?._id}>{cat?.name || 'Unknown'}</option>
                 ))}
               </select>
             </div>
@@ -321,26 +329,26 @@ export function RoleManagement() {
                   </tr>
                 ) : (
                   roles.map((role) => (
-                    <tr key={role._id} className="hover:bg-white/5 transition">
+                    <tr key={role?._id || Math.random().toString()} className="hover:bg-white/5 transition">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full shadow-sm" style={{ backgroundColor: role.color }} />
-                          <span className="font-medium text-white">{role.name}</span>
+                          <div className="h-3 w-3 rounded-full shadow-sm" style={{ backgroundColor: role?.color || '#5865F2' }} />
+                          <span className="font-medium text-white">{role?.name || 'Unknown Role'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="rounded-md bg-white/5 px-2 py-1 text-xs">
-                          {typeof role.categoryId === 'object' && role.categoryId !== null 
+                          {role?.categoryId && typeof role.categoryId === 'object' 
                             ? (role.categoryId.name || 'Uncategorized') 
                             : 'Uncategorized'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <code className="text-xs text-[#9aa7ff] bg-white/5 px-2 py-1 rounded">{role.discordRoleId}</code>
+                        <code className="text-xs text-[#9aa7ff] bg-white/5 px-2 py-1 rounded">{role?.discordRoleId || 'N/A'}</code>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => deleteRole(role._id)}
+                          onClick={() => role?._id && deleteRole(role._id)}
                           className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition active:scale-90"
                           title="Delete Role"
                         >
