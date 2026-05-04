@@ -60,8 +60,8 @@ export function RoleManagement() {
       const res = await fetch("/api/admin/roles");
       const data = await res.json();
       if (Array.isArray(data)) {
-        // فحص كل دور للتأكد من سلامة البيانات قبل تخزينها
-        const validatedRoles = data.map(role => ({
+        // تصفية العناصر الفارغة وفحص سلامة كل دور
+        const validatedRoles = data.filter(r => r !== null).map(role => ({
           ...role,
           categoryId: role.categoryId || 'Uncategorized'
         }));
@@ -77,11 +77,10 @@ export function RoleManagement() {
       const res = await fetch("/api/admin/categories");
       const data = await res.json();
       if (Array.isArray(data)) {
-        // التأكد من أن البيانات مصفوفة وليست null
-        setCategories(data);
-        if (data.length > 0 && !categoryId) {
-          const firstValidCat = data.find(c => c && c._id);
-          if (firstValidCat) setCategoryId(firstValidCat._id);
+        const validCats = data.filter(c => c !== null && c._id && c.name);
+        setCategories(validCats);
+        if (validCats.length > 0 && !categoryId) {
+          setCategoryId(validCats[0]._id);
         }
       }
     } catch (error) {
