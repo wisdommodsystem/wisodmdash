@@ -438,27 +438,25 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const rolesByCategory = useMemo(() => {
     const grouped: Record<string, CustomRole[]> = {};
-    if (!categories || !Array.isArray(categories)) return grouped;
+    const validCategories = (categories || []).filter(cat => cat && cat._id);
+    const validRoles = (availableRoles || []).filter(role => role !== null);
     
-    categories.forEach(cat => {
-      if (cat && cat._id) {
-        grouped[cat._id] = availableRoles.filter(role => {
-          if (!role) return false;
-          // التحقق من أن categoryId هو كائن صالح وله _id مطابق، أو أنه سلسلة نصية مطابقة
-          const roleCatId = (role.categoryId && typeof role.categoryId === 'object') 
-            ? role.categoryId._id 
-            : role.categoryId;
-          
-          return roleCatId === cat._id;
-        });
-      }
+    validCategories.forEach(cat => {
+      grouped[cat._id] = validRoles.filter(role => {
+        const roleCatId = (role.categoryId && typeof role.categoryId === 'object') 
+          ? role.categoryId._id 
+          : role.categoryId;
+        
+        return roleCatId === cat._id;
+      });
     });
     return grouped;
   }, [availableRoles, categories]);
 
   const visibleCategories = useMemo(() => {
-    if (!categories || !Array.isArray(categories)) return [];
-    return categories.filter(cat => cat && cat._id && rolesByCategory[cat._id]?.length > 0);
+    return (categories || []).filter(cat => 
+      cat && cat._id && rolesByCategory[cat._id] && rolesByCategory[cat._id].length > 0
+    );
   }, [categories, rolesByCategory]);
 
   return (
