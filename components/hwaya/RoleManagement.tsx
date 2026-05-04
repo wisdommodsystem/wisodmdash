@@ -80,9 +80,11 @@ export function RoleManagement() {
         const validatedRoles = data
           .filter((r: any) => r !== null && typeof r === 'object')
           .map((role: any) => {
+            // ضمان وجود كائن للتصنيف دائماً
             let cat = role.categoryId;
-            // إذا كان التصنيف null أو غير موجود، نضع كائناً افتراضياً
-            if (!cat || typeof cat !== 'object') {
+            
+            // فحص شامل للتصنيف
+            if (!cat || typeof cat !== 'object' || cat === null) {
               cat = { name: 'Uncategorized', _id: typeof cat === 'string' ? cat : 'none' };
             } else if (!cat.name) {
               cat.name = 'Uncategorized';
@@ -90,6 +92,7 @@ export function RoleManagement() {
             
             return {
               ...role,
+              name: role.name || 'Unnamed Role',
               categoryId: cat
             };
           });
@@ -108,8 +111,13 @@ export function RoleManagement() {
       const res = await fetch("/api/admin/categories", { cache: "no-store" });
       const data = await res.json();
       if (Array.isArray(data)) {
-        // التأكد من أن كل تصنيف هو كائن صالح ويحتوي على اسم
-        const validCats = data.filter(c => c !== null && typeof c === 'object' && c._id && c.name);
+        // التأكد من أن كل تصنيف هو كائن صالح
+        const validCats = data
+          .filter(c => c !== null && typeof c === 'object' && c._id)
+          .map(c => ({
+            ...c,
+            name: c.name || 'Unnamed Category'
+          }));
         setCategories(validCats);
         if (validCats.length > 0 && !categoryId) {
           setCategoryId(validCats[0]._id);
@@ -299,9 +307,9 @@ export function RoleManagement() {
                 required
               >
                 <option value="" disabled>Select Category</option>
-                {(categories || []).filter((cat: any) => cat !== null).map((cat: any) => (
-                  <option key={cat?._id || Math.random()} value={cat?._id}>{cat?.name || 'Unknown'}</option>
-                ))}
+                {(categories || []).filter((cat: any) => cat && typeof cat === 'object').map((cat: any) => (
+            <option key={cat?._id || Math.random()} value={cat?._id}>{cat?.name || 'Unknown'}</option>
+          ))}
               </select>
             </div>
             <div>
