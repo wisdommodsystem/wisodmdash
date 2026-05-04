@@ -135,7 +135,7 @@ export function RoleManagement() {
   const addRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryId) {
-      alert("Please create a category first!");
+      alert("Please select a category first!");
       return;
     }
     setLoading(true);
@@ -145,13 +145,26 @@ export function RoleManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, categoryId, color, discordRoleId }),
       });
+      
+      const result = await res.json();
+      
       if (res.ok) {
         setName("");
         setDiscordRoleId("");
+        // تحديث القائمة محلياً فوراً لتجنب أي تأخير في الـ fetch
+        const newRoleWithCategory = {
+          ...result,
+          categoryId: categories.find(c => c._id === categoryId) || { name: 'Uncategorized', _id: categoryId }
+        };
+        setRoles(prev => [...prev, newRoleWithCategory]);
+        // ثم نقوم بعمل fetch للتأكد من مزامنة البيانات بالكامل
         fetchRoles();
+      } else {
+        alert(result.error || "Failed to add role");
       }
     } catch (error) {
       console.error("Error adding role:", error);
+      alert("An unexpected error occurred while adding the role.");
     } finally {
       setLoading(false);
     }
