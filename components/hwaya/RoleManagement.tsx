@@ -284,7 +284,7 @@ export function RoleManagement() {
                 required
               >
                 <option value="" disabled>Select Category</option>
-                {categories.map((cat) => (
+                {(categories || []).filter(cat => cat !== null).map((cat) => (
                   <option key={cat?._id || Math.random()} value={cat?._id}>{cat?.name || 'Unknown'}</option>
                 ))}
               </select>
