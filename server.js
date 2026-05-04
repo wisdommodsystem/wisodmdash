@@ -15,10 +15,9 @@ app.prepare().then(() => {
     try {
       const parsedUrl = parse(req.url, true);
       
-      // ضروري جداً لعمل NextAuth على Render
-      if (req.headers['x-forwarded-proto'] !== 'https') {
-        req.headers['x-forwarded-proto'] = 'https';
-      }
+      // إخبار Next.js أننا دائماً نستخدم HTTPS لفك تعارض الكوكيز
+      req.headers['x-forwarded-proto'] = 'https';
+      req.headers['x-forwarded-host'] = req.headers.host;
 
       await handle(req, res, parsedUrl);
     } catch (err) {
