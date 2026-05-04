@@ -4,11 +4,15 @@ import connectToDatabase from "./mongodb";
 import UserProfile from "@/models/UserProfile";
 import { headers } from "next/headers";
 
-const LOGGIN_WEBHOOK = process.env.LOGGIN_WEBHOOK;
-
 async function sendLoginLog(profile: any, ip: string, userAgent: string) {
-  if (!LOGGIN_WEBHOOK) return;
+  const webhookUrl = process.env.LOGGIN_WEBHOOK;
+  if (!webhookUrl) {
+    console.warn("[Webhook] LOGGIN_WEBHOOK is not defined in environment variables");
+    return;
+  }
+
   try {
+    console.log("[Webhook] Attempting to send login log for user:", profile.username);
     let deviceType = "Desktop/Unknown";
     if (/mobile/i.test(userAgent)) deviceType = "Mobile Device";
     if (/tablet/i.test(userAgent)) deviceType = "Tablet";
@@ -36,7 +40,7 @@ async function sendLoginLog(profile: any, ip: string, userAgent: string) {
       }
     };
 
-    await fetch(LOGGIN_WEBHOOK, {
+    await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -45,8 +49,9 @@ async function sendLoginLog(profile: any, ip: string, userAgent: string) {
         embeds: [embed]
       })
     });
+    console.log("[Webhook] Login log sent successfully");
   } catch (err) {
-    console.error("Failed to send webhook log:", err);
+    console.error("[Webhook] Failed to send webhook log:", err);
   }
 }
 
@@ -69,14 +74,22 @@ export const authOptions: NextAuthOptions = {
       if (profile && "id" in profile) {
         token.discordId = String(profile.id);
         
-        // إعادة تفعيل الـ Webhook بعد استقرار الاستضافة على Vercel
+        // إعادة تفعيل الـ Webhook مع معالجة أفضل للأخطاء والـ IP
         try {
-          const headersList = await headers();
-          const ip = headersList.get("x-forwarded-for") || "unknown";
-          const userAgent = headersList.get("user-agent") || "unknown";
+          let ip = "unknown";
+          let userAgent = "unknown";
+          
+          try {
+            const headersList = await headers();
+            ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown";
+            userAgent = headersList.get("user-agent") || "unknown";
+          } catch (hErr) {
+            console.warn("[Auth] Could not fetch headers for logging:", hErr);
+          }
+          
           await sendLoginLog(profile, ip, userAgent);
         } catch (webhookErr) {
-          console.error("Webhook logging failed:", webhookErr);
+          console.error("[Auth] Webhook logging failed:", webhookErr);
         }
         
         // محاولة تحديث البيانات في قاعدة البيانات
