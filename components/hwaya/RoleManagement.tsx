@@ -284,7 +284,7 @@ export function RoleManagement() {
                 required
               >
                 <option value="" disabled>Select Category</option>
-                {(categories || []).filter(cat => cat !== null).map((cat) => (
+                {(categories || []).filter((cat: any) => cat !== null).map((cat: any) => (
                   <option key={cat?._id || Math.random()} value={cat?._id}>{cat?.name || 'Unknown'}</option>
                 ))}
               </select>
@@ -328,7 +328,7 @@ export function RoleManagement() {
                     <td colSpan={4} className="px-6 py-8 text-center text-slate-500">No roles added yet.</td>
                   </tr>
                 ) : (
-                  roles.map((role) => (
+                  roles.map((role: any) => (
                     <tr key={role?._id || Math.random().toString()} className="hover:bg-white/5 transition">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
