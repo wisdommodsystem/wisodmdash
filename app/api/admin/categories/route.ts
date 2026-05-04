@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, icon } = body;
 
+    console.log("[Category API] Received request:", { name, icon });
+
     if (!name || !name.trim()) {
+      console.warn("[Category API] Validation failed: Name is empty");
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
@@ -37,23 +40,29 @@ export async function POST(request: Request) {
     });
 
     if (existingCategory) {
+      console.warn("[Category API] Conflict: Category already exists:", existingCategory.name);
       return NextResponse.json({ 
         error: `Category "${existingCategory.name}" already exists` 
       }, { status: 400 });
     }
 
+    console.log("[Category API] Creating new category:", trimmedName);
     const newCategory = await Category.create({ 
       name: trimmedName, 
       icon: icon || "Tag" 
     });
     
+    console.log("[Category API] Success:", newCategory._id);
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error: any) {
-    console.error("Category creation error:", error);
+    console.error("[Category API] CRITICAL ERROR:", error);
     if (error.code === 11000) {
       return NextResponse.json({ error: "Category already exists (Database Constraint)" }, { status: 400 });
     }
-    return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Internal Server Error", 
+      details: error.message 
+    }, { status: 500 });
   }
 }
 
