@@ -16,9 +16,9 @@ app.prepare().then(() => {
       const parsedUrl = parse(req.url, true);
       
       // إخبار Next.js أننا دائماً نستخدم HTTPS لفك تعارض الكوكيز
+      // هذا ضروري جداً عند العمل خلف Cloudflare و Render
       req.headers['x-forwarded-proto'] = 'https';
-      req.headers['x-forwarded-host'] = req.headers.host;
-
+      
       await handle(req, res, parsedUrl);
     } catch (err) {
       console.error('Error occurred handling', req.url, err);
