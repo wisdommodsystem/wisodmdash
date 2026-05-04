@@ -438,18 +438,27 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
 
   const rolesByCategory = useMemo(() => {
     const grouped: Record<string, CustomRole[]> = {};
+    if (!categories || !Array.isArray(categories)) return grouped;
+    
     categories.forEach(cat => {
-      grouped[cat._id] = availableRoles.filter(role => 
-        (typeof role.categoryId === 'object' && role.categoryId !== null) 
-          ? role.categoryId._id === cat._id 
-          : role.categoryId === cat._id
-      );
+      if (cat && cat._id) {
+        grouped[cat._id] = availableRoles.filter(role => {
+          if (!role) return false;
+          // التحقق من أن categoryId هو كائن صالح وله _id مطابق، أو أنه سلسلة نصية مطابقة
+          const roleCatId = (role.categoryId && typeof role.categoryId === 'object') 
+            ? role.categoryId._id 
+            : role.categoryId;
+          
+          return roleCatId === cat._id;
+        });
+      }
     });
     return grouped;
   }, [availableRoles, categories]);
 
   const visibleCategories = useMemo(() => {
-    return categories.filter(cat => rolesByCategory[cat._id]?.length > 0);
+    if (!categories || !Array.isArray(categories)) return [];
+    return categories.filter(cat => cat && cat._id && rolesByCategory[cat._id]?.length > 0);
   }, [categories, rolesByCategory]);
 
   return (
