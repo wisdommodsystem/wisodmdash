@@ -58,12 +58,16 @@ export function RoleManagement() {
   const fetchRoles = async () => {
     try {
       const res = await fetch("/api/admin/roles");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to fetch roles");
+      }
       const data = await res.json();
       if (Array.isArray(data)) {
         // تصفية العناصر الفارغة وفحص سلامة كل دور
         const validatedRoles = data.filter(r => r !== null).map(role => ({
           ...role,
-          categoryId: role.categoryId || 'Uncategorized'
+          categoryId: role.categoryId || { name: 'Uncategorized', _id: 'none' }
         }));
         setRoles(validatedRoles);
       }
@@ -314,7 +318,7 @@ export function RoleManagement() {
                       <td className="px-6 py-4">
                         <span className="rounded-md bg-white/5 px-2 py-1 text-xs">
                           {typeof role.categoryId === 'object' && role.categoryId !== null 
-                            ? role.categoryId.name 
+                            ? (role.categoryId.name || 'Uncategorized') 
                             : 'Uncategorized'}
                         </span>
                       </td>
