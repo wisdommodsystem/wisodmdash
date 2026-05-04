@@ -440,7 +440,9 @@ export function DiscordDashboard({ profile, insights }: DiscordDashboardProps) {
     const grouped: Record<string, CustomRole[]> = {};
     categories.forEach(cat => {
       grouped[cat._id] = availableRoles.filter(role => 
-        typeof role.categoryId === 'object' ? role.categoryId._id === cat._id : role.categoryId === cat._id
+        (typeof role.categoryId === 'object' && role.categoryId !== null) 
+          ? role.categoryId._id === cat._id 
+          : role.categoryId === cat._id
       );
     });
     return grouped;
