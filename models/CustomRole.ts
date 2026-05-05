@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import "./Category"; // ضمان تحميل موديل التصنيفات أولاً
 
 export interface ICustomRole extends Document {
   name: string;

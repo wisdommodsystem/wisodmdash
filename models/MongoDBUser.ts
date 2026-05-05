@@ -1,3 +1,4 @@
+// @ts-ignore
 import mongoose, { Schema, Document } from "mongoose";
 
 // تصحيح الـ Interface لتشمل كل الحقول المستخدمة في الـ Schema

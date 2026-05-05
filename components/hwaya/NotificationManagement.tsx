@@ -161,41 +161,41 @@ export function NotificationManagement() {
           {notifications.length === 0 ? (
             <div className="p-12 text-center text-slate-500 text-sm italic">No active transmissions found.</div>
           ) : (
-            notifications.map((notif) => (
-              <div key={notif._id} className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition group">
-                <div className="flex items-center gap-4">
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center border border-white/5 ${
-                    notif.type === 'Announcement' ? 'bg-blue-500/10 text-blue-400' :
-                    notif.type === 'Alert' ? 'bg-red-500/10 text-red-400' :
-                    notif.type === 'Event' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-purple-500/10 text-purple-400'
-                  }`}>
-                    {notif.type === 'Announcement' && <Megaphone className="h-5 w-5" />}
-                    {notif.type === 'Alert' && <AlertCircle className="h-5 w-5" />}
-                    {notif.type === 'Event' && <Calendar className="h-5 w-5" />}
-                    {notif.type === 'Gift' && <Gift className="h-5 w-5" />}
+          (notifications || []).filter((n: any) => n !== null).map((notif: any) => (
+            <div key={notif._id} className="p-4 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition group">
+              <div className="flex items-center gap-4">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center border border-white/5 ${
+                  notif.type === 'Announcement' ? 'bg-blue-500/10 text-blue-400' :
+                  notif.type === 'Alert' ? 'bg-red-500/10 text-red-400' :
+                  notif.type === 'Event' ? 'bg-amber-500/10 text-amber-400' :
+                  'bg-purple-500/10 text-purple-400'
+                }`}>
+                  {notif.type === 'Announcement' && <Megaphone className="h-5 w-5" />}
+                  {notif.type === 'Alert' && <AlertCircle className="h-5 w-5" />}
+                  {notif.type === 'Event' && <Calendar className="h-5 w-5" />}
+                  {notif.type === 'Gift' && <Gift className="h-5 w-5" />}
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">{notif.title || 'Broadcast'}</span>
+                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-white/5 text-slate-500 uppercase">
+                      {notif.target === 'All' ? 'GLOBAL' : 'SPECIFIC'}
+                    </span>
                   </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">{notif.title}</span>
-                      <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-white/5 text-slate-500 uppercase">
-                        {notif.target === 'All' ? 'GLOBAL' : 'SPECIFIC'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 line-clamp-1 max-w-md">{notif.message}</p>
-                    <div className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter">
-                      {new Date(notif.createdAt).toLocaleString()}
-                    </div>
+                  <p className="text-xs text-slate-500 line-clamp-1 max-w-md">{notif.message}</p>
+                  <div className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter">
+                    {notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteNotif(notif._id)}
-                  className="p-2 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition active:scale-90"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
-            ))
+              <button
+                onClick={() => deleteNotif(notif._id)}
+                className="p-2 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition active:scale-90"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))
           )}
         </div>
       </div>

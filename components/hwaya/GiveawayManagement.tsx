@@ -204,7 +204,7 @@ export function GiveawayManagement() {
           {giveaways.length === 0 ? (
             <div className="p-12 text-center text-slate-500 text-sm">No giveaways found.</div>
           ) : (
-            giveaways.map((giveaway) => (
+            (giveaways || []).filter((g: any) => g !== null).map((giveaway: any) => (
               <div key={giveaway._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-lg bg-[#5865F2]/10 flex items-center justify-center border border-white/10">
@@ -212,7 +212,7 @@ export function GiveawayManagement() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">{giveaway.title}</span>
+                      <span className="text-sm font-bold text-white">{giveaway.title || 'Giveaway'}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
                         giveaway.status === 'Active' ? 'bg-green-500/10 text-green-400' :
                         giveaway.status === 'Ended' ? 'bg-red-500/10 text-red-400' :
@@ -224,7 +224,7 @@ export function GiveawayManagement() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
                       <span className="flex items-center gap-1"><Trophy className="h-3 w-3" /> {giveaway.prize}</span>
                       <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {giveaway.participants?.length || 0} participants</span>
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Ends: {new Date(giveaway.endDate).toLocaleString()}</span>
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Ends: {giveaway.endDate ? new Date(giveaway.endDate).toLocaleString() : 'N/A'}</span>
                     </div>
                   </div>
                 </div>

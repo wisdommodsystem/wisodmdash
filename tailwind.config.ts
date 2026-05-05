@@ -1,4 +1,12 @@
-import type { Config } from "tailwindcss";
+// Define the Config type locally to avoid missing module errors
+type Config = {
+  darkMode?: string | string[] | boolean;
+  content?: string[];
+  theme?: {
+    extend?: Record<string, any>;
+  };
+  plugins?: any[];
+};
 
 const config: Config = {
   darkMode: ["class"],

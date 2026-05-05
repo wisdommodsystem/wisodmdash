@@ -198,40 +198,39 @@ export function EventManagement() {
           {events.length === 0 ? (
             <div className="p-12 text-center text-slate-500 text-sm">No events scheduled.</div>
           ) : (
-            events.map((event) => (
-              <div key={event._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition">
-                <div className="flex items-center gap-4">
-                  {event.imageUrl && (
-                    <div className="h-12 w-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                      <img src={event.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  )}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">{event.title}</span>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                        event.type === 'Lecture' ? 'bg-blue-500/10 text-blue-400' :
-                        event.type === 'Discussion' ? 'bg-purple-500/10 text-purple-400' :
-                        'bg-slate-500/10 text-slate-400'
-                      }`}>
-                        {event.type}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {new Date(event.date).toLocaleString()}</span>
-                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location}</span>
-                    </div>
+          (events || []).filter((e: any) => e !== null).map((event: any) => (
+            <div key={event._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.02] transition">
+              <div className="flex items-center gap-4">
+                {event.imageUrl && (
+                  <div className="h-12 w-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+                    <img src={event.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">{event.title || 'Event'}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                      event.type === 'Lecture' ? 'bg-blue-500/10 text-blue-400' :
+                      event.type === 'Discussion' ? 'bg-purple-500/10 text-purple-400' :
+                      'bg-slate-500/10 text-slate-400'
+                    }`}>
+                      {event.type}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {event.date ? new Date(event.date).toLocaleString() : 'Date Unknown'}</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location || 'Discord'}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteEvent(event._id)}
-                  className="self-end sm:self-center p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition active:scale-90"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
-            ))
-          )}
+              <button
+                onClick={() => deleteEvent(event._id)}
+                className="self-end sm:self-center p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition active:scale-90"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )))}
         </div>
       </div>
     </div>

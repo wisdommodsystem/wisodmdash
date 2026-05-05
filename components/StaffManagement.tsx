@@ -16,9 +16,11 @@ export function StaffManagement() {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch("/api/admin/staff-apps");
+      const res = await fetch("/api/admin/staff-apps", { cache: "no-store" });
       const data = await res.json();
-      setApplications(data.applications);
+      if (data.applications && Array.isArray(data.applications)) {
+        setApplications(data.applications.filter((a: any) => a !== null));
+      }
       setIsEnabled(data.isEnabled);
     } catch (error) {
       console.error("Failed to fetch applications:", error);

@@ -21,7 +21,7 @@ export function PermissionManagement() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("/api/admin/settings/permissions");
+      const res = await fetch("/api/admin/settings/permissions", { cache: "no-store" });
       const data = await res.json();
       if (res.ok) setRoleSettings(data);
     } catch (error) {
@@ -53,9 +53,9 @@ export function PermissionManagement() {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch("/api/admin/permissions");
+      const res = await fetch("/api/admin/permissions", { cache: "no-store" });
       const data = await res.json();
-      if (Array.isArray(data)) setRequests(data);
+      if (Array.isArray(data)) setRequests(data.filter(r => r !== null));
     } catch (error) {
       console.error("Failed to fetch permission requests:", error);
     } finally {
@@ -170,7 +170,7 @@ export function PermissionManagement() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {requests.map((req) => (
+          {(requests || []).filter((req: any) => req !== null).map((req: any) => (
             <div key={req._id} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#121623] p-6 transition-all hover:border-white/20 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
@@ -184,7 +184,7 @@ export function PermissionManagement() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">{req.type}</h3>
+                    <h3 className="text-lg font-bold text-white">{req.type || 'Request'}</h3>
                     <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       New Request
                     </span>
@@ -192,13 +192,13 @@ export function PermissionManagement() {
                   <div className="mt-1 flex items-center gap-3 text-sm text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <User className="h-3.5 w-3.5 text-[#5865F2]" />
-                      <span className="font-medium text-slate-200">{req.username}</span>
-                      <span className="text-slate-600">({req.userId})</span>
+                      <span className="font-medium text-slate-200">{req.username || 'Unknown'}</span>
+                      <span className="text-slate-600">({req.userId || 'No ID'})</span>
                     </div>
                     <div className="h-1 w-1 rounded-full bg-slate-700" />
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
-                      <span>{new Date(req.createdAt).toLocaleDateString()}</span>
+                      <span>{req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
                 </div>

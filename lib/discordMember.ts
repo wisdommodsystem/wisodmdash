@@ -63,7 +63,12 @@ export async function getDiscordMemberProfile(
       })
     ]);
 
-    if (!memberRes.ok || !rolesRes.ok) {
+    if (!memberRes.ok) {
+      console.error(`[Discord API Error] Member fetch failed: ${memberRes.status} ${memberRes.statusText}`);
+      return null;
+    }
+    if (!rolesRes.ok) {
+      console.error(`[Discord API Error] Roles fetch failed: ${rolesRes.status} ${rolesRes.statusText}`);
       return null;
     }
 

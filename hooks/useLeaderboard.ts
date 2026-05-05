@@ -22,7 +22,7 @@ export function useLeaderboard(sortBy: "voice" | "text" = "voice") {
     async function loadLeaderboard() {
       setState(prev => ({ ...prev, loading: true }));
       try {
-        const response = await fetch(`/api/user/leaderboard?sortBy=${sortBy}`);
+        const response = await fetch(`/api/user/leaderboard?sortBy=${sortBy}`, { cache: "no-store" });
         if (!response.ok) {
           throw new Error("Failed to fetch leaderboard data");
         }
